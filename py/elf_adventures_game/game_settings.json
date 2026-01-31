@@ -1,8 +1,9 @@
 {
-    "language": "en",
-    "sound_volume": 0.3,
-    "music_volume": 0.5,
+    "language": "ru",
+    "sound_volume": 0.4,
+    "music_volume": 0.4,
     "fullscreen": true,
     "music_enabled": true,
-    "sound_effects_enabled": true
+    "sound_effects_enabled": false,
+    "difficulty": "hard"
 }

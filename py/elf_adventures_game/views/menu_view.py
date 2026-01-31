@@ -1,19 +1,19 @@
 import arcade
-from settings import settings
-from audio_manager import audio_manager
+from settings_manager import settings_instance
+from audio_manager import audio_manager_instance
+from views.settings_view import SettingsView
+from views.game_view import GameView
 
 class MenuView(arcade.View):
-    
     def __init__(self):
         super().__init__()
         self.background_color = arcade.color.DARK_BLUE
-        
         self.background_texture = None
         self.background_sprite = None
+        
         try:
             self.background_texture = arcade.load_texture(r"tiles/images.png")
             print("Фон меню успешно загружен")
-            
             self.background_sprite = arcade.Sprite()
             self.background_sprite.texture = self.background_texture
         except Exception as e:
@@ -33,9 +33,11 @@ class MenuView(arcade.View):
         self.play_button_sprite_list = None
         self.settings_button_sprite = None
         self.settings_button_sprite_list = None
+        self.exit_button_sprite = None
+        self.exit_button_sprite_list = None
         
         try:
-            texture = arcade.load_texture(r"tiles/кнопка.png")
+            texture = arcade.load_texture(r"tiles/button.png")
             print("Текстура для кнопок успешно загружена")
             
             self.play_button_sprite = arcade.Sprite()
@@ -44,11 +46,17 @@ class MenuView(arcade.View):
             self.settings_button_sprite = arcade.Sprite()
             self.settings_button_sprite.texture = texture
             
+            self.exit_button_sprite = arcade.Sprite()
+            self.exit_button_sprite.texture = texture
+            
             self.play_button_sprite_list = arcade.SpriteList()
             self.play_button_sprite_list.append(self.play_button_sprite)
             
             self.settings_button_sprite_list = arcade.SpriteList()
             self.settings_button_sprite_list.append(self.settings_button_sprite)
+            
+            self.exit_button_sprite_list = arcade.SpriteList()
+            self.exit_button_sprite_list.append(self.exit_button_sprite)
             
         except Exception as e:
             print(f"Ошибка загрузки текстуры кнопки: {e}")
@@ -56,10 +64,18 @@ class MenuView(arcade.View):
             self.play_button_sprite_list = None
             self.settings_button_sprite = None
             self.settings_button_sprite_list = None
+            self.exit_button_sprite = None
+            self.exit_button_sprite_list = None
         
         self.button_scale = 1.0
         self.animation_direction = 1
         self.animation_speed = 0.5
+        
+        self.play_button = None
+        self.settings_button = None
+        self.exit_button = None
+        
+        self.start_y = 0
 
         self.load_menu_music()
         
@@ -68,17 +84,17 @@ class MenuView(arcade.View):
             r"music/Mystic Sands.mp3"
         ]
         for music_path in music_paths:
-            if audio_manager.load_music(music_path):
+            if audio_manager_instance.load_music(music_path):
                 print(f"Музыка меню загружена: {music_path}")
-                if settings.current_settings["music_enabled"]:
-                    audio_manager.play_music()
+                if settings_instance.current_settings["music_enabled"]:
+                    audio_manager_instance.play_music()
                 break
         
     def on_show(self):
-        if (audio_manager.current_music and 
-            not audio_manager.is_music_playing and 
-            settings.current_settings["music_enabled"]):
-            audio_manager.resume_music()
+        if (audio_manager_instance.current_music and 
+            not audio_manager_instance.is_music_playing and 
+            settings_instance.current_settings["music_enabled"]):
+            audio_manager_instance.resume_music()
         
     def setup(self):
         width = self.window.width
@@ -105,6 +121,10 @@ class MenuView(arcade.View):
         if self.settings_button_sprite:
             self.settings_button_sprite.width = self.button_width
             self.settings_button_sprite.height = self.button_height
+            
+        if self.exit_button_sprite:
+            self.exit_button_sprite.width = self.button_width
+            self.exit_button_sprite.height = self.button_height
         
         self.start_y = height // 2 + self.button_height // 2
         
@@ -122,6 +142,13 @@ class MenuView(arcade.View):
             "height": self.button_height
         }
         
+        self.exit_button = {
+            "x": width // 2,
+            "y": self.start_y - (self.button_height + self.button_spacing) * 2,
+            "width": self.button_width,
+            "height": self.button_height
+        }
+        
         if self.play_button_sprite:
             self.play_button_sprite.center_x = self.play_button["x"]
             self.play_button_sprite.center_y = self.play_button["y"]
@@ -129,6 +156,10 @@ class MenuView(arcade.View):
         if self.settings_button_sprite:
             self.settings_button_sprite.center_x = self.settings_button["x"]
             self.settings_button_sprite.center_y = self.settings_button["y"]
+            
+        if self.exit_button_sprite:
+            self.exit_button_sprite.center_x = self.exit_button["x"]
+            self.exit_button_sprite.center_y = self.exit_button["y"]
         
     def on_draw(self):
         self.clear()
@@ -158,21 +189,23 @@ class MenuView(arcade.View):
         instruction_font_size = int(24 * (width / 1920))
         controls_font_size = int(20 * (width / 1920))
         
+        white = arcade.color.WHITE
+        
         arcade.draw_text(
-            settings.get_text("game_title"),
+            settings_instance.get_text("game_title"),
             width // 2,
             height - 350,
-            arcade.color.WHITE,
+            white,
             title_font_size,
             anchor_x="center",
             bold=True
         )
         
         arcade.draw_text(
-            settings.get_text("game_subtitle"),
+            settings_instance.get_text("game_subtitle"),
             width // 2,
             height - 240,
-            arcade.color.WHITE,
+            white,
             subtitle_font_size,
             anchor_x="center"
         )
@@ -206,10 +239,10 @@ class MenuView(arcade.View):
             )
         
         arcade.draw_text(
-            settings.get_text("play_button"),
+            settings_instance.get_text("play_button"),
             self.play_button["x"],
             self.play_button["y"],
-            arcade.color.WHITE,
+            white,
             button_font_size,
             anchor_x="center",
             anchor_y="center",
@@ -230,30 +263,66 @@ class MenuView(arcade.View):
             )
         
         arcade.draw_text(
-            settings.get_text("settings_button"),
+            settings_instance.get_text("settings_button"),
             self.settings_button["x"],
             self.settings_button["y"],
-            arcade.color.WHITE,
+            white,
             button_font_size,
             anchor_x="center",
             anchor_y="center",
             bold=True
         )
         
+        if self.exit_button_sprite_list:
+            self.exit_button_sprite_list.draw()
+        else:
+            exit_left = self.exit_button["x"] - self.button_width/2
+            exit_right = self.exit_button["x"] + self.button_width/2
+            exit_bottom = self.exit_button["y"] - self.button_height/2
+            exit_top = self.exit_button["y"] + self.button_height/2
+            
+            arcade.draw_lrbt_rectangle_filled(
+                exit_left, exit_right, exit_bottom, exit_top,
+                arcade.color.RED
+            )
+        
+        exit_text = "ВЫХОД" if settings_instance.current_settings["language"] == "ru" else "EXIT"
         arcade.draw_text(
-            settings.get_text("controls_instruction"),
+            exit_text,
+            self.exit_button["x"],
+            self.exit_button["y"],
+            white,
+            button_font_size,
+            anchor_x="center",
+            anchor_y="center",
+            bold=True
+        )
+        
+        difficulty_text = f"{settings_instance.get_text('difficulty_level')} {settings_instance.get_difficulty_name(settings_instance.current_settings['difficulty'])}"
+        arcade.draw_text(
+            difficulty_text,
             width // 2,
-            120,
-            arcade.color.LIGHT_GRAY,
+            70,
+            white,
+            instruction_font_size,
+            anchor_x="center",
+            bold=True
+        )
+        
+        arcade.draw_text(
+            settings_instance.get_text("controls_instruction"),
+            width // 2,
+            150,
+            white,
             instruction_font_size,
             anchor_x="center"
         )
         
         arcade.draw_text(
-            settings.get_text("game_controls"),
+            settings_instance.get_text("game_controls"),
             width // 2,
-            80,
-            arcade.color.LIGHT_GRAY,
+            110,
+            white,
             controls_font_size,
             anchor_x="center"
         )
@@ -270,15 +339,18 @@ class MenuView(arcade.View):
             
     def on_key_press(self, key, modifiers):
         if key == arcade.key.ENTER:
-            audio_manager.play_menu_select_sound()
+            audio_manager_instance.play_menu_select_sound()
             self.start_game()
         elif key == arcade.key.S:
-            audio_manager.play_menu_select_sound()
+            audio_manager_instance.play_menu_select_sound()
             self.open_settings()
+        elif key == arcade.key.ESCAPE:
+            audio_manager_instance.play_button_click_sound()
+            self.window.close()
             
     def on_mouse_press(self, x, y, button, modifiers):
         if button == arcade.MOUSE_BUTTON_LEFT:
-            audio_manager.play_button_click_sound()
+            audio_manager_instance.play_button_click_sound()
             
             play_left = self.play_button["x"] - self.button_width/2
             play_right = self.play_button["x"] + self.button_width/2
@@ -286,7 +358,7 @@ class MenuView(arcade.View):
             play_top = self.play_button["y"] + self.button_height/2
             
             if play_left <= x <= play_right and play_bottom <= y <= play_top:
-                audio_manager.play_menu_select_sound()
+                audio_manager_instance.play_menu_select_sound()
                 self.start_game()
                 
             settings_left = self.settings_button["x"] - self.button_width/2
@@ -295,17 +367,24 @@ class MenuView(arcade.View):
             settings_top = self.settings_button["y"] + self.button_height/2
             
             if settings_left <= x <= settings_right and settings_bottom <= y <= settings_top:
-                audio_manager.play_menu_select_sound()
+                audio_manager_instance.play_menu_select_sound()
                 self.open_settings()
                 
+            exit_left = self.exit_button["x"] - self.button_width/2
+            exit_right = self.exit_button["x"] + self.button_width/2
+            exit_bottom = self.exit_button["y"] - self.button_height/2
+            exit_top = self.exit_button["y"] + self.button_height/2
+            
+            if exit_left <= x <= exit_right and exit_bottom <= y <= exit_top:
+                audio_manager_instance.play_button_click_sound()
+                self.window.close()
+                
     def start_game(self):
-        from views.game_view import GameView
         game_view = GameView()
         game_view.setup()
         self.window.show_view(game_view)
         
     def open_settings(self):
-        from views.settings_view import SettingsView
         settings_view = SettingsView(self)
         settings_view.setup()
         self.window.show_view(settings_view)

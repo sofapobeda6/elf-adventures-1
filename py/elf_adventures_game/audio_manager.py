@@ -1,6 +1,5 @@
-import arcade
 import os
-from settings import settings
+import arcade
 
 class AudioManager:
     def __init__(self):
@@ -37,17 +36,16 @@ class AudioManager:
             return False
     
     def play_music(self, loop=True):
+        from settings_manager import settings_instance
+        
         if (self.current_music and 
-            settings.current_settings["music_enabled"] and 
-            settings.current_settings["music_volume"] > 0):
+            settings_instance.current_settings["music_enabled"] and 
+            settings_instance.current_settings["music_volume"] > 0):
             
-            #стоп музыка
             if self.music_player:
                 self.stop_music()
             
-            volume = settings.current_settings["music_volume"]
-            
-            #воспроизведение музыки
+            volume = settings_instance.current_settings["music_volume"]
             self.music_player = self.current_music.play(volume=volume, loop=loop)
             self.is_music_playing = True
             print(f"Музыка начала играть (громкость: {volume})")
@@ -66,29 +64,35 @@ class AudioManager:
             print("Музыка на паузе")
     
     def resume_music(self):
+        from settings_manager import settings_instance
+        
         if (self.current_music and self.music_player and 
-            settings.current_settings["music_enabled"]):
+            settings_instance.current_settings["music_enabled"]):
             
-            volume = settings.current_settings["music_volume"]
+            volume = settings_instance.current_settings["music_volume"]
             self.current_music.resume(self.music_player)
             self.is_music_playing = True
             print("Музыка возобновлена")
     
     def update_music_volume(self):
+        from settings_manager import settings_instance
+        
         if self.current_music and self.music_player and self.is_music_playing:
-            volume = settings.current_settings["music_volume"]
-            if settings.current_settings["music_enabled"] and volume > 0:
+            volume = settings_instance.current_settings["music_volume"]
+            if settings_instance.current_settings["music_enabled"] and volume > 0:
                 was_playing = self.is_music_playing
                 self.stop_music()
                 if was_playing:
                     self.play_music()
     
     def play_sound_effect(self, sound, volume_multiplier=1.0):
+        from settings_manager import settings_instance
+        
         if (sound and 
-            settings.current_settings["sound_effects_enabled"] and 
-            settings.current_settings["sound_volume"] > 0):
+            settings_instance.current_settings["sound_effects_enabled"] and 
+            settings_instance.current_settings["sound_volume"] > 0):
             
-            volume = settings.current_settings["sound_volume"] * volume_multiplier
+            volume = settings_instance.current_settings["sound_volume"] * volume_multiplier
             sound.play(volume=volume)
     
     def play_jump_sound(self):
@@ -100,4 +104,5 @@ class AudioManager:
     def play_button_click_sound(self):
         self.play_sound_effect(self.button_click_sound, 0.5)
 
-audio_manager = AudioManager()
+
+audio_manager_instance = AudioManager()

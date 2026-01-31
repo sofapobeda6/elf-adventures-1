@@ -1,6 +1,6 @@
 import arcade
-from settings import settings
-from audio_manager import audio_manager
+from settings_manager import settings_instance
+from audio_manager import audio_manager_instance
 
 class SettingsView(arcade.View):
     
@@ -35,21 +35,21 @@ class SettingsView(arcade.View):
         self.setting_sprite_lists = []
         
         try:
-            self.settings_button_texture = arcade.load_texture(r"tiles/полное.png")
+            self.settings_button_texture = arcade.load_texture(r"tiles/full.png")
             print("Текстура для кнопок настроек успешно загружена")
         except Exception as e:
             print(f"Ошибка загрузки текстуры для кнопок настроек: {e}")
         
         self.back_button = {
             "x": 0,
-            "y": 220,
+            "y": 120,
             "width": 400,
             "height": 90
         }
         
         self.save_button = {
             "x": 0,
-            "y": 320,
+            "y": 220,
             "width": 400,
             "height": 90
         }
@@ -60,7 +60,7 @@ class SettingsView(arcade.View):
         self.save_button_sprite_list = None
         
         try:
-            action_button_texture = arcade.load_texture(r"tiles/кнопка.png")
+            action_button_texture = arcade.load_texture(r"tiles/button.png")
             
             self.back_button_sprite = arcade.Sprite()
             self.back_button_sprite.texture = action_button_texture
@@ -79,7 +79,7 @@ class SettingsView(arcade.View):
             self.save_button_sprite = None
         
         self.selected_setting = None
-        self.temp_settings = settings.current_settings.copy()
+        self.temp_settings = settings_instance.current_settings.copy()
         
     def on_show(self):
         arcade.set_background_color(self.background_color)
@@ -105,7 +105,7 @@ class SettingsView(arcade.View):
         self.setting_sprites = []
         self.setting_sprite_lists = []
         
-        for i in range(5):
+        for i in range(6):
             sprite = arcade.Sprite()
             if self.settings_button_texture:
                 sprite.texture = self.settings_button_texture
@@ -124,9 +124,10 @@ class SettingsView(arcade.View):
         self.save_button["height"] = int(90 * scale)
         
         self.back_button["x"] = width // 2
-        self.back_button["y"] = int(230 * scale)
+        self.back_button["y"] = int(120 * scale)
+        
         self.save_button["x"] = width // 2
-        self.save_button["y"] = int(340 * scale)
+        self.save_button["y"] = int(220 * scale)
         
         if self.back_button_sprite:
             self.back_button_sprite.width = self.back_button["width"]
@@ -135,7 +136,7 @@ class SettingsView(arcade.View):
         if self.save_button_sprite:
             self.save_button_sprite.width = self.save_button["width"]
             self.save_button_sprite.height = self.save_button["height"]
-        
+    
     def on_draw(self):
         self.clear()
         
@@ -163,16 +164,13 @@ class SettingsView(arcade.View):
         button_font_size = int(38 * (width / 1920))
         instruction_font_size = int(24 * (width / 1920))
         
-        pale_pink = (255, 200, 210)
-        value_pink = (255, 150, 170)
-        value_highlight_pink = (255, 180, 200)
-        white = (255, 255, 255)
+        dark_blue = arcade.color.DARK_BLUE
         
         arcade.draw_text(
-            settings.get_text("settings_title"),
+            settings_instance.get_text("settings_title"),
             width // 2,
             height - 85,
-            white,
+            dark_blue,
             title_font_size,
             anchor_x="center",
             bold=True
@@ -180,25 +178,28 @@ class SettingsView(arcade.View):
 
         y_pos = height - 165
         
-        for i in range(5):
+        for i in range(6):
             if i == 0:
-                name = settings.get_text("language")
-                value = f"{settings.get_language_name(self.temp_settings['language'])}"
+                name = settings_instance.get_text("language")
+                value = f"{settings_instance.get_language_name(self.temp_settings['language'])}"
             elif i == 1:
-                name = settings.get_text("sound_volume")
+                name = settings_instance.get_text("difficulty")
+                value = f"{settings_instance.get_difficulty_name(self.temp_settings['difficulty'])}"
+            elif i == 2:
+                name = settings_instance.get_text("sound_volume")
                 sound_percent = int(self.temp_settings["sound_volume"] * 100)
                 value = f"{sound_percent}%"
-            elif i == 2:
-                name = settings.get_text("music_volume")
+            elif i == 3:
+                name = settings_instance.get_text("music_volume")
                 music_percent = int(self.temp_settings["music_volume"] * 100)
                 value = f"{music_percent}%"
-            elif i == 3:
-                name = settings.get_text("music_enabled")
-                music_enabled_text = settings.get_text("enabled") if self.temp_settings["music_enabled"] else settings.get_text("disabled")
-                value = music_enabled_text
             elif i == 4:
-                name = settings.get_text("sound_effects_enabled")
-                sound_enabled_text = settings.get_text("enabled") if self.temp_settings["sound_effects_enabled"] else settings.get_text("disabled")
+                name = settings_instance.get_text("music_enabled")
+                music_enabled_text = settings_instance.get_text("enabled") if self.temp_settings["music_enabled"] else settings_instance.get_text("disabled")
+                value = music_enabled_text
+            elif i == 5:
+                name = settings_instance.get_text("sound_effects_enabled")
+                sound_enabled_text = settings_instance.get_text("enabled") if self.temp_settings["sound_effects_enabled"] else settings_instance.get_text("disabled")
                 value = sound_enabled_text
             
             if i < len(self.setting_sprites):
@@ -220,7 +221,7 @@ class SettingsView(arcade.View):
                 name,
                 name_x,
                 y_pos + name_y_offset,
-                value_pink if self.selected_setting != i else pale_pink,
+                dark_blue,
                 setting_font_size,
                 anchor_y="center",
                 bold=True
@@ -233,7 +234,7 @@ class SettingsView(arcade.View):
                 value,
                 value_x,
                 y_pos + value_y_offset,
-                value_pink if self.selected_setting != i else value_highlight_pink,
+                dark_blue,
                 setting_font_size,
                 anchor_x="right",
                 anchor_y="center",
@@ -259,16 +260,16 @@ class SettingsView(arcade.View):
             
             arcade.draw_lrbt_rectangle_outline(
                 save_left, save_right, save_bottom, save_top,
-                white,
+                dark_blue,
                 3
             )
         
         save_text_y_offset = 2
         arcade.draw_text(
-            settings.get_text("save_button"),
+            settings_instance.get_text("save_button"),
             self.save_button["x"],
             self.save_button["y"] + save_text_y_offset,
-            white,
+            dark_blue,
             button_font_size,
             anchor_x="center",
             anchor_y="center",
@@ -292,28 +293,28 @@ class SettingsView(arcade.View):
             
             arcade.draw_lrbt_rectangle_outline(
                 back_left, back_right, back_bottom, back_top,
-                white,
+                dark_blue,
                 3
             )
         
         back_text_y_offset = 2
         arcade.draw_text(
-            settings.get_text("back_button"),
+            settings_instance.get_text("back_button"),
             self.back_button["x"],
             self.back_button["y"] + back_text_y_offset,
-            white,
+            dark_blue,
             button_font_size,
             anchor_x="center",
             anchor_y="center",
             bold=True
         )
         
-        instruction_y_offset = 10
+        instruction_y_offset = -10
         arcade.draw_text(
-            settings.get_text("settings_controls"),
+            settings_instance.get_text("settings_controls"),
             width // 2,
-            135 + instruction_y_offset,
-            white,
+            35 + instruction_y_offset,
+            dark_blue,
             instruction_font_size,
             anchor_x="center",
             bold=True
@@ -321,41 +322,41 @@ class SettingsView(arcade.View):
     
     def on_key_press(self, key, modifiers):
         if key == arcade.key.ESCAPE:
-            audio_manager.play_button_click_sound()
+            audio_manager_instance.play_button_click_sound()
             self.window.show_view(self.previous_view)
             
         elif key == arcade.key.ENTER:
-            audio_manager.play_menu_select_sound()
+            audio_manager_instance.play_menu_select_sound()
             if self.selected_setting is not None:
                 self._change_setting()
             else:
                 self.save_settings()
                 
         elif key == arcade.key.UP:
-            audio_manager.play_button_click_sound()
+            audio_manager_instance.play_button_click_sound()
             if self.selected_setting is None:
                 self.selected_setting = 0
             else:
                 self.selected_setting = max(0, self.selected_setting - 1)
                 
         elif key == arcade.key.DOWN:
-            audio_manager.play_button_click_sound()
+            audio_manager_instance.play_button_click_sound()
             if self.selected_setting is None:
                 self.selected_setting = 0
             else:
-                self.selected_setting = min(4, self.selected_setting + 1)
+                self.selected_setting = min(5, self.selected_setting + 1)
                 
         elif key == arcade.key.LEFT:
-            audio_manager.play_button_click_sound()
+            audio_manager_instance.play_button_click_sound()
             self._adjust_setting(-1)
             
         elif key == arcade.key.RIGHT:
-            audio_manager.play_button_click_sound()
+            audio_manager_instance.play_button_click_sound()
             self._adjust_setting(1)
             
     def on_mouse_press(self, x, y, button, modifiers):
         if button == arcade.MOUSE_BUTTON_LEFT:
-            audio_manager.play_button_click_sound()
+            audio_manager_instance.play_button_click_sound()
             
             save_left = self.save_button["x"] - self.save_button["width"]/2
             save_right = self.save_button["x"] + self.save_button["width"]/2
@@ -363,7 +364,7 @@ class SettingsView(arcade.View):
             save_top = self.save_button["y"] + self.save_button["height"]/2
             
             if save_left <= x <= save_right and save_bottom <= y <= save_top:
-                audio_manager.play_menu_select_sound()
+                audio_manager_instance.play_menu_select_sound()
                 self.save_settings()
                 
             back_left = self.back_button["x"] - self.back_button["width"]/2
@@ -372,11 +373,11 @@ class SettingsView(arcade.View):
             back_top = self.back_button["y"] + self.back_button["height"]/2
             
             if back_left <= x <= back_right and back_bottom <= y <= back_top:
-                audio_manager.play_button_click_sound()
+                audio_manager_instance.play_button_click_sound()
                 self.window.show_view(self.previous_view)
             
             y_pos = self.window.height - 165
-            for i in range(5):
+            for i in range(6):
                 left = self.window.width // 2 - self.button_width/2
                 right = self.window.width // 2 + self.button_width/2
                 bottom = y_pos - self.button_height/2
@@ -393,35 +394,41 @@ class SettingsView(arcade.View):
             current_lang = self.temp_settings["language"]
             new_lang = "en" if current_lang == "ru" else "ru"
             self.temp_settings["language"] = new_lang
-            settings.localization = settings.load_localization()
+            settings_instance.localization = settings_instance.load_localization()
             
-        elif self.selected_setting == 3:
-            self.temp_settings["music_enabled"] = not self.temp_settings["music_enabled"]
+        elif self.selected_setting == 1:
+            difficulties = ["easy", "medium", "hard"]
+            current_index = difficulties.index(self.temp_settings["difficulty"])
+            new_index = (current_index + 1) % len(difficulties)
+            self.temp_settings["difficulty"] = difficulties[new_index]
             
         elif self.selected_setting == 4:
+            self.temp_settings["music_enabled"] = not self.temp_settings["music_enabled"]
+            
+        elif self.selected_setting == 5:
             self.temp_settings["sound_effects_enabled"] = not self.temp_settings["sound_effects_enabled"]
             
     def _adjust_setting(self, delta):
-        if self.selected_setting == 1:
+        if self.selected_setting == 2:
             self.temp_settings["sound_volume"] = max(0.0, min(1.0,
                 self.temp_settings["sound_volume"] + delta * 0.1))
                 
-        elif self.selected_setting == 2:
+        elif self.selected_setting == 3:
             self.temp_settings["music_volume"] = max(0.0, min(1.0,
                 self.temp_settings["music_volume"] + delta * 0.1))
                 
     def save_settings(self):
-        settings.current_settings = self.temp_settings.copy()
-        settings.save_settings()
+        settings_instance.current_settings = self.temp_settings.copy()
+        settings_instance.save_settings()
         
-        settings.localization = settings.load_localization()
+        settings_instance.localization = settings_instance.load_localization()
         
-        audio_manager.update_music_volume()
+        audio_manager_instance.update_music_volume()
         
-        if not settings.current_settings["music_enabled"]:
-            audio_manager.pause_music()
-        elif audio_manager.current_music and not audio_manager.is_music_playing:
-            audio_manager.resume_music()
+        if not settings_instance.current_settings["music_enabled"]:
+            audio_manager_instance.pause_music()
+        elif audio_manager_instance.current_music and not audio_manager_instance.is_music_playing:
+            audio_manager_instance.resume_music()
         
         from views.menu_view import MenuView
         menu_view = MenuView()

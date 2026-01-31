@@ -1,10 +1,6 @@
 import os
 import json
 
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
-TITLE = "ELF ADVENTURES"
-
 class Settings:
     def __init__(self):
         self.settings_file = "game_settings.json"
@@ -14,14 +10,15 @@ class Settings:
             "music_volume": 0.5,
             "fullscreen": True,
             "music_enabled": True,
-            "sound_effects_enabled": True
+            "sound_effects_enabled": True,
+            "difficulty": "medium"
         }
         self.current_settings = self.default_settings.copy()
         self.load_settings()
         
         self.localization = self.load_localization()
         
-    def load_settings(self): #загрузка настроек
+    def load_settings(self):
         try:
             if os.path.exists(self.settings_file):
                 with open(self.settings_file, 'r', encoding='utf-8') as f:
@@ -34,7 +31,7 @@ class Settings:
         except Exception as e:
             print(f"Ошибка загрузки настроек: {e}")
             
-    def save_settings(self): #сохранение настроек 
+    def save_settings(self):
         try:
             with open(self.settings_file, 'w', encoding='utf-8') as f:
                 json.dump(self.current_settings, f, indent=4, ensure_ascii=False)
@@ -42,7 +39,7 @@ class Settings:
         except Exception as e:
             print(f"Ошибка сохранения настроек: {e}")
             
-    def load_localization(self): #загрузка локализации
+    def load_localization(self):
         localizations = {
             "ru": {
                 "game_title": "ПРИКЛЮЧЕНИЯ ЭЛЬФА",
@@ -57,6 +54,10 @@ class Settings:
                 "fullscreen": "Полный экран",
                 "music_enabled": "Музыка",
                 "sound_effects_enabled": "Звуки",
+                "difficulty": "Уровень сложности",
+                "difficulty_easy": "Лёгкий",
+                "difficulty_medium": "Средний",
+                "difficulty_hard": "Сложный",
                 "controls_instruction": "Нажмите кнопку 'ИГРАТЬ' или клавишу ENTER",
                 "game_controls": "Управление в игре: ←→/AD - движение, ПРОБЕЛ - прыжок",
                 "menu_controls": "Управление: ←→/AD - движение, ПРОБЕЛ - прыжок, ESC - меню",
@@ -70,7 +71,15 @@ class Settings:
                 "yes": "Да",
                 "no": "Нет",
                 "enabled": "Включено",
-                "disabled": "Выключено"
+                "disabled": "Выключено",
+                "score": "Счёт",
+                "high_score": "Рекорд",
+                "game_over": "ИГРА ОКОНЧЕНА",
+                "final_score": "Итоговый счёт",
+                "restart": "Нажмите ПРОБЕЛ для перезапуска",
+                "pause": "ПАУЗА",
+                "continue": "Продолжить игру",
+                "difficulty_level": "Уровень:",
             },
             "en": {
                 "game_title": "ELF ADVENTURES",
@@ -85,6 +94,10 @@ class Settings:
                 "fullscreen": "Fullscreen",
                 "music_enabled": "Music",
                 "sound_effects_enabled": "Sounds",
+                "difficulty": "Difficulty Level",
+                "difficulty_easy": "Easy",
+                "difficulty_medium": "Medium",
+                "difficulty_hard": "Hard",
                 "controls_instruction": "Press the 'PLAY' button or ENTER key",
                 "game_controls": "Game controls: ←→/AD - movement, SPACE - jump",
                 "menu_controls": "Controls: ←→/AD - move, SPACE - jump, ESC - menu",
@@ -98,7 +111,15 @@ class Settings:
                 "yes": "Yes",
                 "no": "No",
                 "enabled": "Enabled",
-                "disabled": "Disabled"
+                "disabled": "Disabled",
+                "score": "Score",
+                "high_score": "High Score",
+                "game_over": "GAME OVER",
+                "final_score": "Final Score",
+                "restart": "Press SPACE to restart",
+                "pause": "PAUSE",
+                "continue": "Continue Game",
+                "difficulty_level": "Level:",
             }
         }
         
@@ -108,7 +129,7 @@ class Settings:
     def get_text(self, key):
         return self.localization.get(key, key)
     
-    def change_language(self, language): #смена языка
+    def change_language(self, language):
         if language in ["ru", "en"]:
             self.current_settings["language"] = language
             self.localization = self.load_localization()
@@ -121,4 +142,13 @@ class Settings:
             "en": self.get_text("english")
         }
         return languages.get(code, code)
-settings = Settings()
+    
+    def get_difficulty_name(self, code):
+        difficulties = {
+            "easy": self.get_text("difficulty_easy"),
+            "medium": self.get_text("difficulty_medium"),
+            "hard": self.get_text("difficulty_hard")
+        }
+        return difficulties.get(code, code)
+    
+settings_instance = Settings()
